@@ -1,0 +1,52 @@
+
+{% extends "auctions/layout.html" %}
+
+{% block main %}
+
+a
+
+function addComment(data) {
+    const section = document.createElement('section');
+    section.classList.add("comments");
+
+    const p1 = document.createElement('p');
+    p1.innerHTML = data["comment"];
+
+    const p2 = document.createElement('p');
+    p2.style.fontSize = "small";
+    p2.innerHTML = `Posted by <strong>${data["commentor"]}</strong> at ${data["created_at"]}`
+
+    section.append(p1);
+    section.append(p2);
+    document.querySelector('article').prepend(section);
+}
+
+function cancelButton() {
+    window.location = "{% url 'index' %}";
+}
+</script>
+
+
+<h2>Commenting on {{ listing.title }}</h2>
+
+<form action="{% url 'api-add-comment' listing.id %}" method="POST">
+    {% csrf_token %}
+    {{ form.as_table }}
+    <div>
+        <input type="submit" name="cancel" value="Cancel" formnovalidate="formnovalidate" 
+            onClick="cancelButton()">
+        <input type="reset" name="reset" value="Reset">
+        <input type="submit" name="submit" value="Add Comment">
+    </div>
+</form>
+
+<article class="comments">
+    {% for c in listing.comments.all reversed %}
+        <section class="comments">
+            <p>{{ c.comment }}</p>
+            <p style="font-size:small">Posted by <strong>{{c.commentor}}</strong> at {{c.created_at}}</p>
+        </section>
+    {% endfor %}
+</article>
+
+{% endblock %}
