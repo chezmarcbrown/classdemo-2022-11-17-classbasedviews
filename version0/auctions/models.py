@@ -66,7 +66,7 @@ class Comment(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50)
     image = models.ImageField(upload_to='images/categories', blank=True)
 
     class Meta:

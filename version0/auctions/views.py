@@ -5,8 +5,6 @@ from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.views.generic import ListView, CreateView, DeleteView, UpdateView
-from django.urls import reverse_lazy
 
 from .models import User, Listing, Category
 from .forms import ListingForm, BidForm, CommentForm
@@ -71,20 +69,6 @@ def index(request):
         'banner': 'Active Listings'
     })
 
-class ListingListView(ListView):
-    model = Listing
-    template_name = "auctions/index.html"
-    context_object_name = "listings"
-
-    def get_queryset(self):
-        return Listing.objects.all().filter(active=True).order_by('-created_at')
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context['banner'] = "Active Listings"
-        return context
-
-
 def listing(request, listing_id):
     listing = get_object_or_404(Listing, id=listing_id)
     if request.method == 'POST':
@@ -129,12 +113,6 @@ def categories(request):
         'categories': Category.objects.all().order_by('name'),
     })
 
-class CategoryListView(ListView):
-   model = Category
-   template_name = "auctions/categories.html"
-   context_object_name = "categories"
-
-
 def category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     listings = Listing.objects.filter(categories = category, active=True)
@@ -142,36 +120,6 @@ def category(request, category_id):
         'listings': listings,
         'banner': f'{category.name} Listings',
     })
-
-class CategoryListingsView(ListView):
-   model = Listing
-   template_name = "auctions/category_listings.html"
-   context_object_name = "listings"
- 
-   def get_queryset(self):
-       return Listing.objects.filter(categories=self.kwargs["category_id"], active=True)
- 
-   def get_context_data(self):
-       context = super().get_context_data()
-       category_id = self.kwargs["category_id"]
-       category = Category.objects.get(id=category_id)
-       context['category'] = category
-       context['banner'] = f'{category.name} Category ({self.get_queryset().count()} listings)'
-       return context
-
-class CategoryCreateView(CreateView):
-    model = Category
-    fields = ('name', 'image')
-    success_url = reverse_lazy('categories')
-
-class CategoryDeleteView(DeleteView):
-    model = Category
-    success_url = reverse_lazy('categories')
-
-class CategoryUpdateView(UpdateView):
-   model = Category
-   fields = ("name", "image")
-   success_url = reverse_lazy("categories")
 
 @login_required(login_url='login')
 def create_listing(request):
@@ -191,17 +139,6 @@ def create_listing(request):
     else: 
         form = ListingForm(initial={'starting_bid': 1})
     return render(request, "auctions/new_listing.html", {'form':form})
-
-#class ListingCreateView(LoginRequiredMixin, CreateView):
-class ListingCreateView(CreateView):
-    model = Listing
-    template_name = "auctions/new_listing.html"
-    fields = ('title', 'description', 'starting_bid', 'categories', 'image')
-    success_url = reverse_lazy('index')
-
-    def form_valid(self, form):
-        form.instance.creator = self.request.user
-        return super().form_valid(form)
 
 @login_required(login_url='login')
 # possible todo: prevent user to bid on his own listing
